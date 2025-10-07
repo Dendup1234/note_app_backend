@@ -14,7 +14,10 @@
   "test": "echo \"Error: no test specified\" && exit 1",
  
    
-  "start": "node server.js"
+  "start": "node server.js",
+ 
+   
+  "index": "node index.js"
  
   },
  
@@ -25,6 +28,12 @@
   "license": "ISC",
  
   "dependencies": {
+ 
+   
+  "body-parser": "^2.2.0",
+ 
+   
+  "cookie-parser": "^1.4.7",
  
    
   "cors": "^2.8.5",
