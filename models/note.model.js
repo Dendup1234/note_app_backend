@@ -4,7 +4,7 @@ const NoteSchema = mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "Product name is required"],
+      required: [true, "Note title is required"],
     },
     description: {
       type: String,
@@ -25,5 +25,5 @@ const NoteSchema = mongoose.Schema(
   }
 );
 
-const Note = mongoose.model("Note", NoteSchema);
-module.exports = Note;
+const Notes = mongoose.model("Note", NoteSchema, "notes");
+module.exports = Notes;
