@@ -1,0 +1,23 @@
+# Example for a Node.js application
+FROM node:20-alpine
+
+#Define the directory inside the container where your 
+#application code will reside and commands will be executed.
+WORKDIR /app
+
+#Copy only the dependency definition files (e.g., package.json, requirements.txt) first. 
+#This allows Docker to cache the dependency installation layer, 
+#speeding up subsequent builds when only code changes
+COPY package.json ./
+RUN npm install
+
+# Install nodemon globally for live reload
+RUN npm install -g nodemon
+
+#Copy the rest of your application code 
+#into the working directory
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

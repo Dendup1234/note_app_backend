@@ -1,22 +1,58 @@
-    version: '3.8'
-    services:
-      mongodb:
-        image: mongo:latest
-        container_name: mongodb
-        restart: unless-stopped
-        ports:
-          - "27017:27017"
-        environment:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password
-        volumes:
-          - mongodb_data:/data/db
-        networks:
-          - mongodb_network
+version: "3.8"
 
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: notes_mongodb_dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      # Optional: create an initial DB
+      # MONGO_INITDB_DATABASE: noteapp
+    ports:
+      - "27017:27017"
     volumes:
-      mongodb_data:
+      - mongo_data:/data/db
+    healthcheck:
+      # Run inside the container; localhost is correct here.
+      test: ["CMD", "mongosh", "--quiet", "mongodb://admin:password@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
 
-    networks:
-      mongodb_network:
-        driver: bridge
+  # Express Web Application (Development)
+  web:
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    container_name: notes_web_dev
+    environment:
+      - PORT=3000
+      # Container-to-container connection uses service name "mongodb"
+      - MONGO_URI=mongodb://admin:password@mongodb:27017/noteapp?authSource=admin
+      # If you’re using dotenv in code, you can also add:
+      # - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the whole project so any file change is seen (package.json, server.js, etc.)
+      - .:/app
+      # Keep container's node_modules (don’t overwrite with host)
+      - /app/node_modules
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      # Use CMD-SHELL so it doesn't fail if curl/wget is missing; install curl or switch to node-based check
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/health || wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  mongo_data:

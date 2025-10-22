@@ -3,9 +3,15 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const Notes = require("./models/note.model.js");
+const path = require("path");
 
 //Middleware
 app.use(express.json());
+
+//Setting up the ejs
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.urlencoded({ extended: true }));
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -22,21 +28,39 @@ app.get("/", (req, res) => {
   res.send("Hello from the another world this is me dendup");
 });
 
-app.get("/api/notes", async (req, res) => {
+// Get Functionality of the notes
+app.get("/notes", async (req, res) => {
   try {
-    const note = await Notes.find({});
-    res.status(200).json(note);
+    const notes = await Notes.find({}).lean();
+    res.render("notes", { notes });
   } catch (error) {
     res.status(500).json({ message: error });
   }
 });
+
+// Post Functionality of the notes
 app.post("/api/notes", async (req, res) => {
   try {
-    const note = await Notes.create(req.body);
-    res.status(200).json({ message: note });
+    const payload = {
+      title: req.body.title,
+      description: req.body.description,
+      isCompleted: !!req.body.isCompleted,
+    };
+    await Notes.create(payload);
+    res.redirect("/notes");
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+});
+
+// handle the form
+app.post("/notes", async (req, res) => {
+  await Notes.create({
+    title: req.body.title,
+    description: req.body.description,
+    isCompleted: !!req.body.isCompleted,
+  });
+  res.redirect("/notes");
 });
 
 //Listen to the app

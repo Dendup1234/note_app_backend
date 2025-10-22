@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Notes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Quick minimal styling; remove if you have your own CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/mvp.css" />
+  <style>
+    .row { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    @media (min-width: 900px) {
+      .row { grid-template-columns: 1fr 1fr; }
+    }
+    .note-card { display: grid; gap: .5rem; border: 1px solid #e5e5e5; padding: 1rem; border-radius: 12px; }
+    .note-head { display:flex; align-items:center; justify-content:space-between; gap: .5rem; }
+    .badge { font-size: .8rem; padding: .15rem .5rem; border-radius: 999px; }
+    .badge.ok { background:#e7f8ef; }
+    .badge.no { background:#ffeaea; }
+    .muted { opacity:.7; font-size:.9rem; }
+    img.thumb { max-width: 100%; height: auto; border-radius: 8px; border:1px solid #eee; }
+    form.inline { display:inline-block; margin:0; }
+  </style>
+</head>
+<body>
+
+<main class="row">
+  <!-- Create form -->
+  <section>
+    <h2>Add a note</h2>
+    <form method="post" action="/notes">
+      <label>Title
+        <input type="text" name="title" required />
+      </label>
+
+      <label>Description
+        <textarea name="description" rows="4" required></textarea>
+      </label>
+
+      <label style="display:flex;align-items:center;gap:.5rem;">
+        <input type="checkbox" name="isCompleted" value="true" />
+        Mark as completed
+      </label>
+
+      <button type="submit">Create Note</button>
+    </form>
+  </section>
+
+  <!-- List notes -->
+  <section>
+    <h2>All notes</h2>
+
+    <% if (Array.isArray(notes) && notes.length) { %>
+      <div class="note-list" style="display:grid; gap:1rem;">
+        <% notes.forEach(n => { %>
+          <article class="note-card">
+            <div class="note-head">
+              <h3 style="margin:0;"><%= n.title %></h3>
+              <span class="badge <%= n.isCompleted ? 'ok' : 'no' %>">
+                <%= n.isCompleted ? 'Completed' : 'Not completed' %>
+              </span>
+            </div>
+
+            <% if (n.description) { %>
+              <p><%= n.description %></p>
+            <% } %>
+
+            <% if (n.image) { %>
+              <img class="thumb" src="<%= n.image %>" alt="note image" loading="lazy" />
+            <% } %>
+
+            <p class="muted">
+              #<%= n._id %> •
+              created <%= new Date(n.createdAt).toLocaleString() %>
+              <% if (n.updatedAt && n.updatedAt !== n.createdAt) { %>
+                • updated <%= new Date(n.updatedAt).toLocaleString() %>
+              <% } %>
+            </p>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="muted">No notes yet — add one on the left.</p>
+    <% } %>
+  </section>
+</main>
+
+</body>
+</html>
