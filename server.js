@@ -8,6 +8,9 @@ const path = require("path");
 //Middleware
 app.use(express.json());
 
+//Health Checkup
+app.get("/health", (req, res) => res.status(200).json({ ok: true }));
+
 //Setting up the ejs
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
