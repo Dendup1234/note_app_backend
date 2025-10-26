@@ -2,11 +2,17 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const Notes = require("./models/note.model.js");
 const path = require("path");
+const cookieParser = require("cookie-parser");
+
+//Routes imports
+const authRoutes = require("./routes/auth.route");
+const noteRoutes = require("./routes/note.route");
 
 //Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 //Health Checkup
 app.get("/health", (req, res) => res.status(200).json({ ok: true }));
@@ -14,7 +20,17 @@ app.get("/health", (req, res) => res.status(200).json({ ok: true }));
 //Setting up the ejs
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(express.urlencoded({ extended: true }));
+app.use("/public", express.static(path.join(__dirname, "public")));
+
+//Routes
+app.use("/auth", authRoutes);
+app.use("/notes", noteRoutes);
+
+// Home: redirect to notes if logged in, else login
+app.get("/", (req, res) => {
+  const hasToken = Boolean(req.cookies && req.cookies.token);
+  return hasToken ? res.redirect("/notes") : res.redirect("/auth/login");
+});
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -26,45 +42,6 @@ mongoose
   .catch(() => {
     console.log("Connection Failed");
   });
-
-app.get("/", (req, res) => {
-  res.send("Hello from the another world this is me dendup");
-});
-
-// Get Functionality of the notes
-app.get("/notes", async (req, res) => {
-  try {
-    const notes = await Notes.find({}).lean();
-    res.render("notes", { notes });
-  } catch (error) {
-    res.status(500).json({ message: error });
-  }
-});
-
-// Post Functionality of the notes
-app.post("/api/notes", async (req, res) => {
-  try {
-    const payload = {
-      title: req.body.title,
-      description: req.body.description,
-      isCompleted: !!req.body.isCompleted,
-    };
-    await Notes.create(payload);
-    res.redirect("/notes");
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// handle the form
-app.post("/notes", async (req, res) => {
-  await Notes.create({
-    title: req.body.title,
-    description: req.body.description,
-    isCompleted: !!req.body.isCompleted,
-  });
-  res.redirect("/notes");
-});
 
 //Listen to the app
 app.listen(process.env.PORT, () => {
