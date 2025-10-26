@@ -4,6 +4,7 @@ const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const methodOverride = require("method-override");
 
 //Routes imports
 const authRoutes = require("./routes/auth.route");
@@ -13,6 +14,7 @@ const noteRoutes = require("./routes/note.route");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(methodOverride("_method")); //Enable put and delete method
 
 //Health Checkup
 app.get("/health", (req, res) => res.status(200).json({ ok: true }));
@@ -44,6 +46,11 @@ mongoose
   });
 
 //Listen to the app
-app.listen(process.env.PORT, () => {
-  console.log(`Example app listening on port ${process.env.PORT}`);
-});
+app.listen(
+  process.env.PORT || 3000,
+  "0.0.0.0",
+  () => {},
+  () => {
+    console.log(`Example app listening on port ${process.env.PORT}`);
+  }
+);

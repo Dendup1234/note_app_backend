@@ -1,0 +1,45 @@
+
+# Stage 1: install prod deps
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# Copy lockfiles first for better caching
+COPY package*.json ./
+
+# Install ONLY production dependencies
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Stage 2: assemble build context
+# (copy source, run any build step, prune)
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Reuse the node_modules from deps
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy the rest of your app (adjust paths if needed)
+# If you have a build step (TypeScript, bundling), run it here.
+COPY . .
+
+# If you installed dev deps earlier, prune them now (no-op if you used --omit=dev)
+RUN npm prune --omit=dev
+
+# Stage 3: runtime — Distroless (no shell, no package manager)
+# Options:
+#   gcr.io/distroless/nodejs20-debian12:nonroot 
+FROM gcr.io/distroless/nodejs20-debian12:nonroot
+
+WORKDIR /app
+ENV NODE_ENV=production
+# Distroless already sets entrypoint to "node"
+
+# Copy app with correct ownership for nonroot user
+COPY --chown=nonroot:nonroot --from=build /app /app
+
+# Document the port (for humans/metadata)
+EXPOSE 3000
+
+# Ensure your Express uses 0.0.0.0 and reads PORT from env
+USER nonroot
+# With distroless/nodejs, CMD is just your main script (node is the entrypoint)
+CMD ["server.js"]

@@ -1,0 +1,45 @@
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: dockerfile.prod           # <- your multi-stage + distroless Dockerfile
+    container_name: notes_api_prod
+    env_file:
+      - .env.prod                     # PORT, MONGO_URI, JWT_SECRET, NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    # Distroless has no shell—healthcheck via Node script:
+    healthcheck:
+      test: [ "CMD", "/nodejs/bin/node", "/app/health_checkup/healthcheck.js" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  mongodb:
+    image: mongo:7
+    container_name: notes_mongodb_prod
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      # MONGO_INITDB_DATABASE: noteapp
+    volumes:
+      - mongo_data:/data/db
+    # Do NOT publish Mongo to the internet in prod
+    # ports:
+    #   - "27017:27017"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://admin:password@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mongo_data:
