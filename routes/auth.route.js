@@ -27,18 +27,16 @@ router.post("/register", async (req, res) => {
         .status(400)
         .render("register", { error: "Email already in use" });
     }
-
+    //Intialization
     const user = await User.create({ name, email, password });
-    const token = signToken(user);
-
+    const { token, maxAgeMs } = signToken(user);
     // Send token as HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: maxAgeMs, // cookie dies when JWT dies
     });
-
     res.redirect("/"); // or /notes
   } catch (err) {
     console.error(err);
@@ -55,15 +53,14 @@ router.post("/login", async (req, res) => {
       return res.status(401).render("login", { error: "Invalid credentials" });
     }
 
-    const token = signToken(user);
+    const { token, maxAgeMs } = signToken(user);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: maxAgeMs, // cookie dies when JWT dies
     });
-
-    res.redirect("/"); // or /notes
+    res.redirect("/notes"); // or /notes
   } catch (err) {
     console.error(err);
     res.status(500).render("login", { error: "Server error" });

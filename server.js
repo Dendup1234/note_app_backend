@@ -30,8 +30,21 @@ app.use("/notes", noteRoutes);
 
 // Home: redirect to notes if logged in, else login
 app.get("/", (req, res) => {
-  const hasToken = Boolean(req.cookies && req.cookies.token);
-  return hasToken ? res.redirect("/notes") : res.redirect("/auth/login");
+  const token = req.cookies?.token;
+  if (!token) return res.redirect("/auth/login");
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET); // valid & not expired
+    return res.redirect("/notes");
+  } catch {
+    // expired/invalid → clear and go to login
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return res.redirect("/auth/login");
+  }
 });
 
 mongoose

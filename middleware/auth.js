@@ -11,23 +11,47 @@ function getToken(req) {
   return null;
 }
 
-exports.protect = (req, res, next) => {
-  const token = getToken(req);
-  if (!token) return res.status(401).send("Unauthorized");
+function wantsHtml(req) {
+  const a = req.headers.accept || "";
+  return a.includes("text/html");
+}
 
+function protect(req, res, next) {
+  const token = getToken(req);
+  if (!token) {
+    return wantsHtml(req)
+      ? res.redirect("/auth/login")
+      : res.status(401).json({ error: "Unauthorized" });
+  }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, email }
+    req.user = decoded;
     return next();
   } catch {
-    return res.status(401).send("Invalid token");
+    // token invalid/expired → clear it
+    if (req.cookies?.token) {
+      res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
+    return wantsHtml(req)
+      ? res.redirect("/auth/login")
+      : res.status(401).json({ error: "Invalid token" });
   }
-};
+}
 
-exports.signToken = (user) => {
-  return jwt.sign(
+function signToken(user) {
+  // 7-day token
+  const token = jwt.sign(
     { id: user._id.toString(), email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
-};
+  // decode to get exp (seconds since epoch)
+  const { exp } = jwt.decode(token);
+  const maxAgeMs = exp * 1000 - Date.now(); // align cookie to JWT
+  return { token, maxAgeMs: Math.max(0, maxAgeMs) };
+}
+module.exports = { protect, signToken };
