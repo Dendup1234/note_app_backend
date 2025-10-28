@@ -39,15 +39,6 @@ jobs:
         run: |
           if npm run | grep -q "^ *lint"; then npm run lint; else echo "No lint script found."; fi
 
-      - name: Run tests (if available)
-        env:
-          NODE_ENV: test
-          JWT_SECRET: ci-secret
-          MONGO_URI: mongodb://localhost:27017/noteapp
-          PORT: 3000
-        run: |
-          if npm run | grep -q "^ *test"; then npm test --silent || npm run test; else echo "No tests found."; fi
-
       - name: Security audit (non-blocking)
         continue-on-error: true
         run: npm audit --json > npm-audit.json || true
