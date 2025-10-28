@@ -1,29 +1,35 @@
-name: Node.js CI Pipeline
+name: API & Mongo Integration Tests
 
 on:
   push:
-    branches: [master, cicd]
+    branches: [main, cicd]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
-  build-test-audit:
-    name: Install • Test • Audit
+  api-tests:
     runs-on: ubuntu-latest
 
+    # Spin up MongoDB for integration tests
     services:
       mongo:
         image: mongo:7
-        ports:
-          - 27017:27017
+        ports: ["27017:27017"]
         options: >-
           --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok'"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
 
+    env:
+      # App env for CI (change as your app expects)
+      NODE_ENV: test
+      PORT: 3000
+      MONGO_URI: mongodb://localhost:27017/noteapp
+      JWT_SECRET: ci-secret
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -35,18 +41,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (if available)
+      # ---- Start API server in background (black-box tests) ----
+      # If your tests import the app (supertest), you don't need this step; it still won't hurt.
+      - name: Start API
         run: |
-          if npm run | grep -q "^ *lint"; then npm run lint; else echo "No lint script found."; fi
+          # Ensure your server binds to 0.0.0.0 and reads PORT
+          # e.g., app.listen(process.env.PORT || 3000, "0.0.0.0", ...)
+          nohup npm start >/tmp/app.log 2>&1 & echo $! > /tmp/app.pid
+      - name: Wait for /health
+        run: |
+          npx --yes wait-on http-get://localhost:${PORT}/health
+          echo "API is up"
 
-      - name: Security audit (non-blocking)
-        continue-on-error: true
-        run: npm audit --json > npm-audit.json || true
-
-      - name: Upload audit report
+      # Upload test reports if any were produced
+      - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: npm-audit-${{ github.sha }}
-          path: npm-audit.json
+          name: api-test-artifacts-${{ github.sha }}
+          path: |
+            coverage
+            junit.xml
+            newman-results.xml
           if-no-files-found: ignore
+
+      # Print app logs if something failed (super useful)
+      - name: Dump app logs on failure
+        if: failure()
+        run: |
+          echo "----- SERVER LOGS -----"
+          tail -n 200 /tmp/app.log || true
+
+      # Stop the background server
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f /tmp/app.pid ]; then kill -9 $(cat /tmp/app.pid) || true; fi
