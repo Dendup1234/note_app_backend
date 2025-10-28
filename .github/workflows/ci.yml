@@ -53,6 +53,15 @@ jobs:
           npx --yes wait-on http-get://localhost:${PORT}/health
           echo "API is up"
 
+      # ---- Option A: Jest/Supertest tests (if present) ----
+      - name: Run Jest tests (if package.json has test script)
+        run: |
+          if npm run | grep -q "^ *test"; then
+            npm test --silent || npm run test
+          else
+            echo "No Jest tests found; skipping."
+          fi
+
       # Upload test reports if any were produced
       - name: Upload test artifacts
         if: always()

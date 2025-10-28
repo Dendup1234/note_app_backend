@@ -58,6 +58,8 @@ mongoose
     console.log("Connection Failed");
   });
 
+module.exports = app;
+
 //Listen to the app
 app.listen(
   process.env.PORT || 3000,
