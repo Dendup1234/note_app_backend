@@ -1,0 +1,61 @@
+name: Node.js CI Pipeline
+
+on:
+  push:
+    branches: [main, cicd]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-audit:
+    name: Install • Test • Audit
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (if available)
+        run: |
+          if npm run | grep -q "^ *lint"; then npm run lint; else echo "No lint script found."; fi
+
+      - name: Run tests (if available)
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ci-secret
+          MONGO_URI: mongodb://localhost:27017/noteapp
+          PORT: 3000
+        run: |
+          if npm run | grep -q "^ *test"; then npm test --silent || npm run test; else echo "No tests found."; fi
+
+      - name: Security audit (non-blocking)
+        continue-on-error: true
+        run: npm audit --json > npm-audit.json || true
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-${{ github.sha }}
+          path: npm-audit.json
+          if-no-files-found: ignore
