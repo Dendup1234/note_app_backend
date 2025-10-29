@@ -18,7 +18,7 @@ app.use(cookieParser());
 app.use(methodOverride("_method")); // Enable PUT and DELETE
 
 // Health Check
-app.get("/health", (req, res) => res.status(200).json({ ok: true }));
+app.get("/health", (_req, res) => res.sendStatus(200));
 
 // EJS setup
 app.set("view engine", "ejs");
