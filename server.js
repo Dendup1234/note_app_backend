@@ -1,10 +1,12 @@
 // server.js
-require("dotenv").config();
+if (process.env.CI !== "true") {
+  require("dotenv").config();
+}
 const mongoose = require("mongoose");
 const app = require("./app");
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/noteapp";
 
 (async () => {
   try {
