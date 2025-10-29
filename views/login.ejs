@@ -1,29 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login | MyApp</title>
     <link rel="stylesheet" href="/public/styles.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .login-container {
+        background: #fff;
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 1rem;
+        color: #333;
+      }
+
+      .error {
+        color: #ff4d4f;
+        background: #ffeaea;
+        padding: 0.5rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      label {
+        text-align: left;
+        font-weight: 500;
+        color: #444;
+        margin-bottom: 0.3rem;
+        display: block;
+      }
+
+      input {
+        padding: 0.7rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+        width: 100%;
+      }
+
+      input:focus {
+        border-color: #2575fc;
+      }
+
+      button {
+        background: #2575fc;
+        color: white;
+        border: none;
+        padding: 0.8rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background: #1b5fd1;
+      }
+
+      .register-link {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      .register-link a {
+        color: #2575fc;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .register-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
-    <h1>Login</h1>
+    <div class="login-container">
+      <h1>Welcome Back</h1>
 
-    <% if (error) { %>
-    <p style="color: red"><%= error %></p>
-    <% } %>
+      <% if (error) { %>
+      <p class="error"><%= error %></p>
+      <% } %>
 
-    <form method="POST" action="/auth/login">
-      <div>
-        <label>Email</label>
-        <input name="email" type="email" required />
-      </div>
-      <div>
-        <label>Password</label>
-        <input name="password" type="password" required />
-      </div>
-      <button type="submit">Login</button>
-    </form>
+      <form method="POST" action="/auth/login">
+        <div>
+          <label for="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+        <button type="submit">Login</button>
+      </form>
 
-    <p>New here? <a href="/auth/register">Create an account</a></p>
+      <p class="register-link">
+        New here? <a href="/auth/register">Create an account</a>
+      </p>
+    </div>
   </body>
 </html>

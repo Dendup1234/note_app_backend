@@ -1,89 +1,385 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Notes</title>
+    <title>Notes | MyApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/public/styles.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .notes-container {
+        background: #fff;
+        width: 100%;
+        max-width: 1000px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        padding: 1.5rem;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .title {
+        margin: 0;
+        color: #333;
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+      .logout-btn {
+        background: #ff4d4f;
+        color: #fff;
+        border: 0;
+        padding: 0.6rem 0.9rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: filter 0.2s ease;
+      }
+      .logout-btn:hover {
+        filter: brightness(0.95);
+      }
+
+      /* Card */
+      .card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .card h2 {
+        margin: 0 0 0.8rem 0;
+        font-size: 1.1rem;
+        color: #333;
+      }
+
+      /* Form styles */
+      form .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+      }
+      @media (max-width: 700px) {
+        form .row {
+          grid-template-columns: 1fr;
+        }
+      }
+      label {
+        display: block;
+        font-weight: 500;
+        color: #444;
+        margin-bottom: 0.35rem;
+      }
+      input[type="text"],
+      textarea {
+        width: 100%;
+        padding: 0.7rem;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s;
+        resize: vertical;
+      }
+      input[type="text"]:focus,
+      textarea:focus {
+        border-color: #2575fc;
+      }
+
+      .checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        color: #444;
+      }
+
+      .btn {
+        background: #2575fc;
+        color: #fff;
+        border: 0;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      .btn:hover {
+        background: #1b5fd1;
+      }
+
+      .btn.secondary {
+        background: #f5f7fb;
+        color: #2b2f36;
+        border: 1px solid #e5e8ee;
+      }
+      .btn.secondary:hover {
+        background: #eef1f7;
+      }
+
+      .btn.danger {
+        background: #ff4d4f;
+      }
+
+      /* Notes list */
+      .notes-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 1000px) {
+        .notes-list {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 650px) {
+        .notes-list {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .note-card {
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .note-title {
+        margin: 0;
+        font-weight: 700;
+        color: #222;
+        font-size: 1.05rem;
+        word-break: break-word;
+      }
+      .note-desc {
+        margin: 0;
+        color: #4b5563;
+        line-height: 1.45;
+        word-break: break-word;
+      }
+      .note-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 0.4rem;
+      }
+      .badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+      }
+      .badge.done {
+        color: #065f46;
+        border-color: #a7f3d0;
+        background: #ecfdf5;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid #eee;
+        margin: 1rem 0;
+      }
+
+      /* Dialog styling */
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      dialog {
+        border: none;
+        border-radius: 16px;
+        padding: 0;
+        max-width: 520px;
+        width: calc(100% - 32px);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.25);
+      }
+      .modal-card {
+        padding: 1rem;
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .modal-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #222;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .mt-8 {
+        margin-top: 0.8rem;
+      }
+      .mt-12 {
+        margin-top: 1.2rem;
+      }
+    </style>
   </head>
   <body>
-    <h1>Notes</h1>
-    <a href="/auth/logout">Logout</a>
+    <div class="notes-container">
+      <!-- Header -->
+      <div class="header">
+        <h1 class="title">Notes</h1>
+        <a class="logout-btn" href="/auth/logout">Logout</a>
+      </div>
 
-    <h2>Add a Note</h2>
-    <form method="POST" action="/notes">
-      <label>Title: <input type="text" name="title" required /></label><br />
-      <label
-        >Description: <textarea name="description" required></textarea></label
-      ><br />
-      <label>
-        Completed:
-        <input type="checkbox" name="isCompleted" value="true" /> </label
-      ><br />
-      <button type="submit">Add</button>
-    </form>
-
-    <hr />
-
-    <h2>All Notes</h2>
-    <ul>
-      <% notes.forEach(n => { %>
-      <li>
-        <b><%= n.title %></b> - <%= n.description %> (<%= n.isCompleted ?
-        "Completed" : "Not Completed" %>)
-        <br />
-
-        <button
-          type="button"
-          class="edit-btn"
-          data-id="<%= n._id %>"
-          data-title="<%- n.title %>"
-          data-description="<%- n.description %>"
-          data-completed="<%= n.isCompleted %>"
-        >
-          Update
-        </button>
-
-        <form
-          action="/notes/<%= n._id %>?_method=DELETE"
-          method="POST"
-          style="display: inline"
-          onsubmit="return confirm('Delete this note?');"
-        >
-          <button type="submit">Delete</button>
+      <!-- Add note -->
+      <div class="card">
+        <h2>Add a Note</h2>
+        <form method="POST" action="/notes">
+          <div class="row">
+            <div>
+              <label for="title">Title</label>
+              <input id="title" type="text" name="title" required />
+            </div>
+            <div>
+              <label for="isCompleted" class="checkbox">
+                <input
+                  id="isCompleted"
+                  type="checkbox"
+                  name="isCompleted"
+                  value="true"
+                />
+                Completed
+              </label>
+            </div>
+          </div>
+          <div class="mt-8">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="4"
+              required
+            ></textarea>
+          </div>
+          <div class="mt-12">
+            <button class="btn" type="submit">Add Note</button>
+          </div>
         </form>
-      </li>
-      <br />
-      <% }) %>
-    </ul>
+      </div>
 
-    <!-- Simple update dialog -->
+      <hr />
+
+      <!-- Notes list -->
+      <div class="card">
+        <h2>All Notes</h2>
+        <ul class="notes-list">
+          <% if (notes && notes.length) { %> <% notes.forEach(n => { %>
+          <li class="note-card">
+            <h3 class="note-title"><%= n.title %></h3>
+            <p class="note-desc"><%= n.description %></p>
+
+            <div class="note-meta">
+              <span class="badge <%= n.isCompleted ? 'done' : '' %>">
+                <%= n.isCompleted ? "Completed" : "Not Completed" %>
+              </span>
+
+              <div class="actions">
+                <button
+                  type="button"
+                  class="btn secondary edit-btn"
+                  data-id="<%= n._id %>"
+                  data-title="<%- n.title %>"
+                  data-description="<%- n.description %>"
+                  data-completed="<%= n.isCompleted %>"
+                >
+                  Update
+                </button>
+
+                <form
+                  action="/notes/<%= n._id %>?_method=DELETE"
+                  method="POST"
+                  onsubmit="return confirm('Delete this note?');"
+                >
+                  <button class="btn danger" type="submit">Delete</button>
+                </form>
+              </div>
+            </div>
+          </li>
+          <% }) %> <% } else { %>
+          <li class="note-card">
+            <p class="note-desc">No notes yet. Add your first one above! 🎯</p>
+          </li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Update dialog -->
     <dialog id="editDialog">
-      <form id="editForm" method="POST">
+      <form id="editForm" method="POST" class="modal-card">
         <input type="hidden" name="_method" value="PUT" />
-        <h3>Update Note</h3>
 
-        <label
-          >Title:
-          <input type="text" name="title" id="editTitle" required /></label
-        ><br />
-        <label
-          >Description:
+        <div class="modal-header">
+          <h3 class="modal-title">Update Note</h3>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary" id="cancelBtn">
+              Close
+            </button>
+            <button type="submit" class="btn">Save</button>
+          </div>
+        </div>
+
+        <div class="mt-12">
+          <label for="editTitle">Title</label>
+          <input type="text" name="title" id="editTitle" required />
+        </div>
+
+        <div class="mt-8">
+          <label for="editDescription">Description</label>
           <textarea
             name="description"
             id="editDescription"
+            rows="4"
             required
-          ></textarea></label
-        ><br />
-        <label>
-          Completed:
-          <input
-            type="checkbox"
-            name="isCompleted"
-            id="editCompleted"
-          /> </label
-        ><br />
+          ></textarea>
+        </div>
 
-        <button type="submit">Save</button>
-        <button type="button" id="cancelBtn">Cancel</button>
+        <div class="mt-8">
+          <label class="checkbox">
+            <input type="checkbox" name="isCompleted" id="editCompleted" />
+            Completed
+          </label>
+        </div>
       </form>
     </dialog>
 
@@ -98,17 +394,15 @@
       document.querySelectorAll(".edit-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.dataset.id;
-          titleInput.value = btn.dataset.title;
-          descInput.value = btn.dataset.description;
+          titleInput.value = btn.dataset.title || "";
+          descInput.value = btn.dataset.description || "";
           completedInput.checked = btn.dataset.completed === "true";
           form.action = `/notes/${id}?_method=PUT`;
           dialog.showModal();
         });
       });
 
-      cancelBtn.addEventListener("click", () => {
-        dialog.close();
-      });
+      cancelBtn.addEventListener("click", () => dialog.close());
     </script>
   </body>
 </html>
