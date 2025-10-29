@@ -47,10 +47,11 @@ jobs:
         run: |
           # Ensure your server binds to 0.0.0.0 and reads PORT
           # e.g., app.listen(process.env.PORT || 3000, "0.0.0.0", ...)
-          nohup npm start >/tmp/app.log 2>&1 & echo $! > /tmp/app.pid
+          node server.js &
+          npx --yes wait-on http-get://localhost:${PORT}/health --timeout 60000
+
       - name: Wait for /health
         run: |
-          npx --yes wait-on http-get://localhost:${PORT}/health
           echo "API is up"
 
       # ---- Option A: Jest/Supertest tests (if present) ----
