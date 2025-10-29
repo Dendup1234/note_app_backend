@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../server"); // make sure your app is exported in server.js
+const app = require("../app");
 const mongoose = require("mongoose");
 
 describe("Notes API", () => {

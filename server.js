@@ -1,71 +1,23 @@
+// server.js
 require("dotenv").config();
-const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
-const path = require("path");
-const cookieParser = require("cookie-parser");
-const methodOverride = require("method-override");
+const app = require("./app");
 
-//Routes imports
-const authRoutes = require("./routes/auth.route");
-const noteRoutes = require("./routes/note.route");
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI;
 
-//Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(methodOverride("_method")); //Enable put and delete method
-
-//Health Checkup
-app.get("/health", (req, res) => res.status(200).json({ ok: true }));
-
-//Setting up the ejs
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use("/public", express.static(path.join(__dirname, "public")));
-
-//Routes
-app.use("/auth", authRoutes);
-app.use("/notes", noteRoutes);
-
-// Home: redirect to notes if logged in, else login
-app.get("/", (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.redirect("/auth/login");
-
+(async () => {
   try {
-    jwt.verify(token, process.env.JWT_SECRET); // valid & not expired
-    return res.redirect("/notes");
-  } catch {
-    // expired/invalid → clear and go to login
-    res.clearCookie("token", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
-    return res.redirect("/auth/login");
-  }
-});
-
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
+    await mongoose.connect(MONGO_URI);
     console.log("Connected to Database");
     console.log("DB Name:", mongoose.connection.name);
     console.log("Host:", mongoose.connection.host);
-  })
-  .catch(() => {
-    console.log("Connection Failed");
-  });
 
-module.exports = app;
-
-//Listen to the app
-app.listen(
-  process.env.PORT || 3000,
-  "0.0.0.0",
-  () => {},
-  () => {
-    console.log(`Example app listening on port ${process.env.PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Example app listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("Connection Failed", err.message);
+    process.exit(1);
   }
-);
+})();

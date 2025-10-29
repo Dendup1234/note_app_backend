@@ -25,7 +25,7 @@ jobs:
       # App env for CI (change as your app expects)
       NODE_ENV: test
       PORT: 3001
-      MONGO_URI: mongodb://admin:password@localhost:27017/noteapp?authSource=
+      MONGO_URI: mongodb://admin:password@localhost:27017/noteapp?authSource=admin
       JWT_SECRET: ci-secret
 
     steps:
